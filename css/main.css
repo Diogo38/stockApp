@@ -1,0 +1,56 @@
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.simple-container {
+    margin-bottom: 10px;
+}
+
+.header{
+    font-family: arial, sans-serif;
+    color: white;
+    background-color: rgb(82, 83, 83);
+    margin-bottom: 10px;
+    text-align: left;
+    padding-left: 8px;
+    align-items: center;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+.column {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 100%;
+    flex: 1;
+}
+
+.flex-item-left {
+    flex: 30%;
+  }
+  
+.flex-item-right {
+    flex: 70%;
+}
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #dddddd;
+  }
