@@ -7,3 +7,7 @@ This app should be used with the exctract csv file from 212 stock platform.
 This will help you understand your dividend portfolio growth.
 
 2021 values are hardcoded in the javascript file.
+
+## Running
+
+Just click in the index.html file
