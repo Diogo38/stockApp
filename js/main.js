@@ -143,6 +143,21 @@ function linearRegression(y,x){
     return lr;
 }
 
+function checkFutureEarnings(totalByMonth){
+    let year2022 = createYearSum(totalByMonth, '2022');
+
+    let x = [1,2,3,4,5,6,7];
+    year2022.pop();
+    let y = year2022.map(parseFloat);
+
+    let lr = linearRegression(y,x);
+
+    let newValues = [];
+    newValues.push(lr['slope']*32 + lr['intercept']);
+
+    console.log(newValues);
+}
+
 function do_something_with(fileToLoad){
 
     if (fileToLoad) {
@@ -158,6 +173,7 @@ function do_something_with(fileToLoad){
 
             createHtmlTable(totalByMonth);
             createBarChart(totalByMonth);
+            checkFutureEarnings(totalByMonth);
             
             console.log("The file: " + fileHeader);
             console.log(totalByMonth);
