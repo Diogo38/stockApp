@@ -4,9 +4,21 @@ var fileLines;
 var fileHeader;
 
 const totalByMonth = {};
+const myStocksTotal = {};
 
-function alertFunction(){
-    console.log("this alert is working");
+function stockAdding(ticker, value, name, numbShares){
+    if(myStocksTotal.hasOwnProperty(ticker)){
+        myStocksTotal[ticker]['Total'] += parseFloat(value);
+        myStocksTotal[ticker]['Number of Shares'] = numbShares;
+    }
+    else {
+        let newObject = {
+            'Total': parseFloat(value),
+            'Name': name,
+            'Number of Shares': numbShares
+        }
+        myStocksTotal[ticker] = newObject;
+    }
 }
 
 function findDividendAction(fileHeader, fileLines, allTextLines){
@@ -16,6 +28,7 @@ function findDividendAction(fileHeader, fileLines, allTextLines){
     let nameIndexInData = fileHeader.findIndex(function(x){return x.toLowerCase().includes('name')});
     let timeIndexInData = fileHeader.findIndex(function(x){return x.toLowerCase().includes('time')});
     let tickerIndexInData = fileHeader.findIndex(function(x){return x.toLowerCase().includes('ticker')});
+    let numberOfSharesIndexInData = fileHeader.findIndex(function(x){return x.toLowerCase().includes('no. of shares')}); 
 
     // Process file for object
     for (var i=1; i<allTextLines.length; i++) {
@@ -24,6 +37,7 @@ function findDividendAction(fileHeader, fileLines, allTextLines){
             if(data[actionIndexInData].toLowerCase().includes(dividendAction)){
                 const tarr = [data[tickerIndexInData],data[nameIndexInData],data[timeIndexInData],data[totalIndexInData]];
                 fileLines.push(tarr);
+                stockAdding(data[tickerIndexInData], data[totalIndexInData], data[nameIndexInData], data[numberOfSharesIndexInData]);
             }
         }
     }
@@ -31,8 +45,8 @@ function findDividendAction(fileHeader, fileLines, allTextLines){
 
 function extractMonthAndYear(theDate){
     // 19/04/2022 08:39
-    let theMonthAndYearPre = theDate.split(' ')[0].split('/');
-    return theMonthAndYearPre[1] + "/" + theMonthAndYearPre[2];
+    let theMonthAndYearPre = theDate.split(' ')[0].split('-');
+    return theMonthAndYearPre[1] + "-" + theMonthAndYearPre[0];
 }
 
 function processDividendByMonth(fileLines){
@@ -47,7 +61,7 @@ function processDividendByMonth(fileLines){
     });
 }
 
-function createHtmlTable(totalByMonth){
+function createHtmlTableDividensByMonth(totalByMonth){
     var table = $('<table></table>');
     const row = $('<tr></tr>');
     const monthColumn = $('<td></td>').text("Month");
@@ -64,7 +78,35 @@ function createHtmlTable(totalByMonth){
         row.append(valueToTable);
         table.append(row);
     });
-    $('#tableContainer').append(table);
+    $('#tableContainerDividends').append(table);
+}
+
+function createStockTable(myStocksTotal){
+    var table = $('<table></table>');
+    const row = $('<tr></tr>');
+    const monthColumn = $('<td></td>').text("Stock");
+    row.append(monthColumn);
+    const valueColumn = $('<td></td>').text("Total Value");
+    row.append(valueColumn);
+    const nameColumn = $('<td></td>').text("Name");
+    row.append(nameColumn);
+    const numbSharesColumn = $('<td></td>').text("Number of shares");
+    row.append(numbSharesColumn);
+    table.append(row);
+
+    Object.entries(myStocksTotal).forEach(function(elementKey){
+        const row = $('<tr></tr>');
+        const keyToTable = $('<td></td>').text(("" + elementKey[0]));
+        row.append(keyToTable);
+        const valueToTable = $('<td></td>').text(("" + elementKey[1]['Total'].toFixed(2)));
+        row.append(valueToTable);
+        const nameToTable = $('<td></td>').text(("" + elementKey[1]['Name']));
+        row.append(nameToTable);
+        const numbOfSharesToTable = $('<td></td>').text(("" + elementKey[1]['Number of Shares']));
+        row.append(numbOfSharesToTable);
+        table.append(row);
+    });
+    $('#tableContainerStocks').append(table);
 }
 
 function createYearSum(totalByMonth, yearToCheck){
@@ -158,7 +200,7 @@ function checkFutureEarnings(totalByMonth){
     console.log(newValues);
 }
 
-function do_something_with(fileToLoad){
+function readFile(fileToLoad){
 
     if (fileToLoad) {
         var reader = new FileReader();
@@ -171,9 +213,12 @@ function do_something_with(fileToLoad){
             findDividendAction(fileHeader, fileLines, allTextLines);
             processDividendByMonth(fileLines);
 
-            createHtmlTable(totalByMonth);
+            createHtmlTableDividensByMonth(totalByMonth);
             createBarChart(totalByMonth);
+
             checkFutureEarnings(totalByMonth);
+
+            createStockTable(myStocksTotal);
             
             console.log("The file: " + fileHeader);
             console.log(totalByMonth);
@@ -181,8 +226,6 @@ function do_something_with(fileToLoad){
         reader.readAsText(fileToLoad, 'UTF-8');
       }
 }
-
-
 
 $(document).ready(function(){
     $('input[type="file"]').change(function(e){
@@ -192,6 +235,6 @@ $(document).ready(function(){
     });
 
     $( "#fileSubmit" ).click(function() {
-        do_something_with(fileContent);
+        readFile(fileContent);
     });
 });
