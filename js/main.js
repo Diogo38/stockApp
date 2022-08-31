@@ -63,12 +63,13 @@ function processDividendByMonth(fileLines){
 
 function createHtmlTableDividensByMonth(totalByMonth){
     var table = $('<table></table>');
-    const row = $('<tr></tr>');
+    let row = $('<tr></tr>');
     const monthColumn = $('<td></td>').text("Month");
     row.append(monthColumn);
     const valueColumn = $('<td></td>').text("Total Value");
     row.append(valueColumn);
     table.append(row);
+	let totalOfTheYear = 0;
 
     Object.entries(totalByMonth).forEach(function(elementKey){
         const row = $('<tr></tr>');
@@ -77,7 +78,17 @@ function createHtmlTableDividensByMonth(totalByMonth){
         const valueToTable = $('<td></td>').text(("" + elementKey[1].toFixed(2)));
         row.append(valueToTable);
         table.append(row);
+		totalOfTheYear +=  parseFloat(elementKey[1].toFixed(2));
     });
+	
+	row = $('<tr></tr>');
+	const keyToTable = $('<td></td>').text("Total of the year");
+	row.append(keyToTable);
+	const valueToTable = $('<td></td>').text("" + totalOfTheYear);
+	row.append(valueToTable);
+	table.append(row);
+	
+	
     $('#tableContainerDividends').append(table);
 }
 
@@ -195,7 +206,11 @@ function checkFutureEarnings(totalByMonth){
     let lr = linearRegression(y,x);
 
     let newValues = [];
-    newValues.push(lr['slope']*32 + lr['intercept']);
+    newValues.push(lr['slope']*8 + lr['intercept']);
+	newValues.push(lr['slope']*9 + lr['intercept']);
+	newValues.push(lr['slope']*10 + lr['intercept']);
+	newValues.push(lr['slope']*11 + lr['intercept']);
+	newValues.push(lr['slope']*12 + lr['intercept']);
 
     console.log(newValues);
 }
