@@ -6,16 +6,32 @@ var fileHeader;
 const totalByMonth = {};
 const myStocksTotal = {};
 
-function stockAdding(ticker, value, name, numbShares){
+function getMonthFromDate(dateToParse){
+	const result1 = dateToParse.split(' ');
+	const result2 = result1[0].split('-');
+	return parseInt(result2[1]);
+}
+
+function stockAdding(ticker, value, name, numbShares, lastDate){
     if(myStocksTotal.hasOwnProperty(ticker)){
+		
+		//console.log('Ticker :' + ticker + ' the date to be set: ' + myStocksTotal[ticker]['Last date']);
+		//console.log('New Date: ' + lastDate);
+		
         myStocksTotal[ticker]['Total'] += parseFloat(value);
         myStocksTotal[ticker]['Number of Shares'] = numbShares;
+		if(getMonthFromDate(myStocksTotal[ticker]['Last date']) < getMonthFromDate(lastDate))
+			myStocksTotal[ticker]['Last date'] = lastDate;
+		
+		myStocksTotal[ticker]['Number of payments'] += 1;
     }
     else {
         let newObject = {
             'Total': parseFloat(value),
             'Name': name,
-            'Number of Shares': numbShares
+            'Number of Shares': numbShares,
+			'Last date': lastDate,
+			'Number of payments': 1
         }
         myStocksTotal[ticker] = newObject;
     }
@@ -37,7 +53,8 @@ function findDividendAction(fileHeader, fileLines, allTextLines){
             if(data[actionIndexInData].toLowerCase().includes(dividendAction)){
                 const tarr = [data[tickerIndexInData],data[nameIndexInData],data[timeIndexInData],data[totalIndexInData]];
                 fileLines.push(tarr);
-                stockAdding(data[tickerIndexInData], data[totalIndexInData], data[nameIndexInData], data[numberOfSharesIndexInData]);
+                stockAdding(data[tickerIndexInData], data[totalIndexInData], data[nameIndexInData], data[numberOfSharesIndexInData],
+				data[timeIndexInData]);
             }
         }
     }
@@ -61,62 +78,60 @@ function processDividendByMonth(fileLines){
     });
 }
 
+function createColumn(row, columnName) {
+	const newColumn = $('<td></td>').text(columnName);
+	return row.append(newColumn);
+}
+function initializeTable(){
+	const table = $('<table></table>');
+	return table;
+}
+function createLine(){
+	const row = $('<tr></tr>');
+	for(let i = 0; i < arguments.length; i++){
+		const keyToTable = $('<td></td>').text(("" + arguments[i]));
+		row.append(keyToTable);
+	}
+	return row;
+}
+
 function createHtmlTableDividensByMonth(totalByMonth){
-    var table = $('<table></table>');
-    let row = $('<tr></tr>');
-    const monthColumn = $('<td></td>').text("Month");
-    row.append(monthColumn);
-    const valueColumn = $('<td></td>').text("Total Value");
-    row.append(valueColumn);
-    table.append(row);
+    let tableArray = initializeTable();
+	let row = $('<tr></tr>');
+	createColumn(row, "Month");
+	createColumn(row, "Total Value");
+	tableArray.append(row);
 	let totalOfTheYear = 0;
 
     Object.entries(totalByMonth).forEach(function(elementKey){
-        const row = $('<tr></tr>');
-        const keyToTable = $('<td></td>').text(("" + elementKey[0]));
-        row.append(keyToTable);
-        const valueToTable = $('<td></td>').text(("" + elementKey[1].toFixed(2)));
-        row.append(valueToTable);
-        table.append(row);
+        const row = createLine(elementKey[0], elementKey[1].toFixed(2))
+        tableArray.append(row);
 		totalOfTheYear +=  parseFloat(elementKey[1].toFixed(2));
     });
 	
-	row = $('<tr></tr>');
-	const keyToTable = $('<td></td>').text("Total of the year");
-	row.append(keyToTable);
-	const valueToTable = $('<td></td>').text("" + totalOfTheYear);
-	row.append(valueToTable);
-	table.append(row);
-	
-	
-    $('#tableContainerDividends').append(table);
+	row = createLine("Total of the year", ("" + totalOfTheYear));
+	tableArray.append(row);
+    $('#tableContainerDividends').append(tableArray[0]);
 }
 
 function createStockTable(myStocksTotal){
-    var table = $('<table></table>');
-    const row = $('<tr></tr>');
-    const monthColumn = $('<td></td>').text("Stock");
-    row.append(monthColumn);
-    const valueColumn = $('<td></td>').text("Total Value");
-    row.append(valueColumn);
-    const nameColumn = $('<td></td>').text("Name");
-    row.append(nameColumn);
-    const numbSharesColumn = $('<td></td>').text("Number of shares");
-    row.append(numbSharesColumn);
-    table.append(row);
+    let table = initializeTable();
+	let row = $('<tr></tr>');
+	
+	createColumn(row, "Stock");
+	createColumn(row, "Total Value");
+	createColumn(row, "Name");
+	createColumn(row, "Number of shares");
+	createColumn(row, "Last Dividend Payment Date");
+	createColumn(row, "Number of payments");
+	table.append(row);
 
     Object.entries(myStocksTotal).forEach(function(elementKey){
-        const row = $('<tr></tr>');
-        const keyToTable = $('<td></td>').text(("" + elementKey[0]));
-        row.append(keyToTable);
-        const valueToTable = $('<td></td>').text(("" + elementKey[1]['Total'].toFixed(2)));
-        row.append(valueToTable);
-        const nameToTable = $('<td></td>').text(("" + elementKey[1]['Name']));
-        row.append(nameToTable);
-        const numbOfSharesToTable = $('<td></td>').text(("" + elementKey[1]['Number of Shares']));
-        row.append(numbOfSharesToTable);
-        table.append(row);
-    });
+        const row = createLine(("" + elementKey[0]),("" + elementKey[1]['Total'].toFixed(2)),
+		("" + elementKey[1]['Name']),("" + elementKey[1]['Number of Shares']),("" + elementKey[1]['Last date'])
+		, "" + elementKey[1]['Number of payments'])
+		table.append(row);
+	});
     $('#tableContainerStocks').append(table);
 }
 
@@ -145,7 +160,6 @@ function createBarChart(totalByMonth){
           opacity: 0.7,
         }
       };
-      0.46,1.01,0.61,0.55,2.44,0.85,2.54,2.79,1.87,3.84
 
       // Hard code values for year 2021
       var trace2 = {
@@ -158,7 +172,7 @@ function createBarChart(totalByMonth){
           opacity: 0.5
         }
       };
-    
+	
       var data = [trace1, trace2];
 
       var layout = {
@@ -198,9 +212,9 @@ function linearRegression(y,x){
 
 function checkFutureEarnings(totalByMonth){
     let year2022 = createYearSum(totalByMonth, '2022');
-
-    let x = [1,2,3,4,5,6,7];
-    year2022.pop();
+	year2022.pop();
+	let w = 0;
+    let x = year2022.map(oink => w++);
     let y = year2022.map(parseFloat);
 
     let lr = linearRegression(y,x);
@@ -211,7 +225,9 @@ function checkFutureEarnings(totalByMonth){
 	newValues.push(lr['slope']*10 + lr['intercept']);
 	newValues.push(lr['slope']*11 + lr['intercept']);
 	newValues.push(lr['slope']*12 + lr['intercept']);
-
+	
+	console.log("The slope = " + lr['slope']);
+	console.log("The intercept = " + lr['intercept']);
     console.log(newValues);
 }
 
@@ -237,6 +253,7 @@ function readFile(fileToLoad){
             
             console.log("The file: " + fileHeader);
             console.log(totalByMonth);
+			console.log(myStocksTotal);
         };
         reader.readAsText(fileToLoad, 'UTF-8');
       }

@@ -32,11 +32,11 @@
 }
 
 .flex-item-left {
-    flex: 30%;
+    flex: 20%;
   }
   
 .flex-item-right {
-    flex: 70%;
+    flex: 50%;
 }
 
 table {
