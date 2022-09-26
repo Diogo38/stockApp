@@ -5,6 +5,7 @@ var fileHeader;
 
 const totalByMonth = {};
 const myStocksTotal = {};
+const yearsMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function getMonthFromDate(dateToParse){
 	const result1 = dateToParse.split(' ');
@@ -145,13 +146,13 @@ function createYearSum(totalByMonth, yearToCheck){
     return yearArray;
 }
 
-function createBarChart(totalByMonth){
+function createBarChart(totalByMonth, projection){
     let barChartLocation = document.getElementById('barChartContainer');
     let year2022 = createYearSum(totalByMonth, '2022');
     
 
     var trace1 = {
-        x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        x: yearsMonths,
         y: year2022,
         type: 'bar',
         name: 'Year 2022',
@@ -163,7 +164,7 @@ function createBarChart(totalByMonth){
 
       // Hard code values for year 2021
       var trace2 = {
-        x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        x: yearsMonths,
         y: [0, 0, 0.46,1.01,0.61,0.55,2.44,0.85,2.54,2.79,1.87,3.84],
         type: 'bar',
         name: 'Year 2021',
@@ -172,8 +173,20 @@ function createBarChart(totalByMonth){
           opacity: 0.5
         }
       };
+	  
+	  var trace3 = {
+        x: yearsMonths,
+        y: projection,
+        type: 'bar',
+        name: 'Projection 2022',
+        marker: {
+          color: 'rgb(144, 238, 144)',
+          opacity: 0.5
+        }
+      };
 	
-      var data = [trace1, trace2];
+	
+      var data = [trace1, trace2, trace3];
 
       var layout = {
         title: 'Dividend Evolution',
@@ -211,24 +224,28 @@ function linearRegression(y,x){
 }
 
 function checkFutureEarnings(totalByMonth){
-    let year2022 = createYearSum(totalByMonth, '2022');
-	year2022.pop();
+    let presentYear = createYearSum(totalByMonth, '2022');
+	presentYear.pop();
 	let w = 0;
-    let x = year2022.map(oink => w++);
-    let y = year2022.map(parseFloat);
+    let x = presentYear.map(oink => w++);
+    let y = presentYear.map(parseFloat);
 
     let lr = linearRegression(y,x);
 
-    let newValues = [];
-    newValues.push(lr['slope']*8 + lr['intercept']);
-	newValues.push(lr['slope']*9 + lr['intercept']);
-	newValues.push(lr['slope']*10 + lr['intercept']);
-	newValues.push(lr['slope']*11 + lr['intercept']);
-	newValues.push(lr['slope']*12 + lr['intercept']);
+    let newValues = presentYear.map(oink => 0);
+	
+	for(let index = presentYear.length; index < 12 ; index++){
+		// calculating the secon month
+		newValues.push(lr['slope']*(index + 1) + lr['intercept'])
+	}
+	
+	//newValues.push(lr['slope']*13 + lr['intercept']);
+	
 	
 	console.log("The slope = " + lr['slope']);
 	console.log("The intercept = " + lr['intercept']);
     console.log(newValues);
+	return newValues;
 }
 
 function readFile(fileToLoad){
@@ -245,9 +262,8 @@ function readFile(fileToLoad){
             processDividendByMonth(fileLines);
 
             createHtmlTableDividensByMonth(totalByMonth);
-            createBarChart(totalByMonth);
-
-            checkFutureEarnings(totalByMonth);
+            const projection = checkFutureEarnings(totalByMonth);
+			createBarChart(totalByMonth, projection);
 
             createStockTable(myStocksTotal);
             
