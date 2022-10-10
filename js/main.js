@@ -20,9 +20,11 @@ function stockAdding(ticker, value, name, numbShares, lastDate){
 		//console.log('New Date: ' + lastDate);
 		
         myStocksTotal[ticker]['Total'] += parseFloat(value);
-        myStocksTotal[ticker]['Number of Shares'] = numbShares;
-		if(getMonthFromDate(myStocksTotal[ticker]['Last date']) < getMonthFromDate(lastDate))
+		if(getMonthFromDate(myStocksTotal[ticker]['Last date']) < getMonthFromDate(lastDate)){
 			myStocksTotal[ticker]['Last date'] = lastDate;
+			myStocksTotal[ticker]['Last payment'] = parseFloat(value);
+			myStocksTotal[ticker]['Number of Shares'] = numbShares;
+		}
 		
 		myStocksTotal[ticker]['Number of payments'] += 1;
     }
@@ -32,6 +34,7 @@ function stockAdding(ticker, value, name, numbShares, lastDate){
             'Name': name,
             'Number of Shares': numbShares,
 			'Last date': lastDate,
+			'Last payment': parseFloat(value),
 			'Number of payments': 1
         }
         myStocksTotal[ticker] = newObject;
@@ -125,12 +128,13 @@ function createStockTable(myStocksTotal){
 	createColumn(row, "Number of shares");
 	createColumn(row, "Last Dividend Payment Date");
 	createColumn(row, "Number of payments");
+	createColumn(row, "Last payment");
 	table.append(row);
 
     Object.entries(myStocksTotal).forEach(function(elementKey){
         const row = createLine(("" + elementKey[0]),("" + elementKey[1]['Total'].toFixed(2)),
 		("" + elementKey[1]['Name']),("" + elementKey[1]['Number of Shares']),("" + elementKey[1]['Last date'])
-		, "" + elementKey[1]['Number of payments'])
+		, "" + elementKey[1]['Number of payments'], "" + elementKey[1]['Last payment'])
 		table.append(row);
 	});
     $('#tableContainerStocks').append(table);
