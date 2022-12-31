@@ -3,6 +3,7 @@ var fileContent;
 var fileLines;
 var fileHeader;
 
+const previousYear = [3.41, 2.35, 6.85,5.28,5.46,8.33,6.74,9.16,13.50,11.10,7.76,17.13];
 const totalByMonth = {};
 const myStocksTotal = {};
 const yearsMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -82,12 +83,18 @@ function processDividendByMonth(fileLines){
     });
 }
 
-function createColumn(row, columnName) {
-	const newColumn = $('<td></td>').text(columnName);
+function createColumn(row, columnName, sort) {
+	let newColumn;
+	if(sort >= 0) {
+		newColumn = $('<th onclick="sortTable(' + sort + ')"></th>').text(columnName);
+	} else {
+		newColumn = $('<th></th>').text(columnName);
+	}
+	
 	return row.append(newColumn);
 }
-function initializeTable(){
-	const table = $('<table></table>');
+function initializeTable(id){
+	const table = $('<table id="'+id+'"></table>');
 	return table;
 }
 function createLine(){
@@ -102,8 +109,8 @@ function createLine(){
 function createHtmlTableDividensByMonth(totalByMonth){
     let tableArray = initializeTable();
 	let row = $('<tr></tr>');
-	createColumn(row, "Month");
-	createColumn(row, "Total Value");
+	createColumn(row, "Month", -1);
+	createColumn(row, "Total Value", -1);
 	tableArray.append(row);
 	let totalOfTheYear = 0;
 
@@ -119,16 +126,16 @@ function createHtmlTableDividensByMonth(totalByMonth){
 }
 
 function createStockTable(myStocksTotal){
-    let table = initializeTable();
+    let table = initializeTable("createStockTable");
 	let row = $('<tr></tr>');
 	
-	createColumn(row, "Stock");
-	createColumn(row, "Total Value");
-	createColumn(row, "Name");
-	createColumn(row, "Number of shares");
-	createColumn(row, "Last Dividend Payment Date");
-	createColumn(row, "Number of payments");
-	createColumn(row, "Last payment");
+	createColumn(row, "Stock" , 0);
+	createColumn(row, "Total Value", 1);
+	createColumn(row, "Name", 2);
+	createColumn(row, "Number of shares", 3);
+	createColumn(row, "Last Dividend Payment Date", 4);
+	createColumn(row, "Number of payments", 5);
+	createColumn(row, "Last payment", 6);
 	table.append(row);
 
     Object.entries(myStocksTotal).forEach(function(elementKey){
@@ -152,14 +159,13 @@ function createYearSum(totalByMonth, yearToCheck){
 
 function createBarChart(totalByMonth, projection){
     let barChartLocation = document.getElementById('barChartContainer');
-    let year2022 = createYearSum(totalByMonth, '2022');
+    let year2022 = createYearSum(totalByMonth, '2023');
     
-
     var trace1 = {
         x: yearsMonths,
         y: year2022,
         type: 'bar',
-        name: 'Year 2022',
+        name: 'Year 2023',
         marker: {
           color: 'rgb(49,130,189)',
           opacity: 0.7,
@@ -167,11 +173,17 @@ function createBarChart(totalByMonth, projection){
       };
 
       // Hard code values for year 2021
+      // [0, 0, 0.46,1.01,0.61,0.55,2.44,0.85,2.54,2.79,1.87,3.84]
+
+      // Hard code values for year 2022
+      // [3.41, 2.35, 6.85,5.28,5.46,8.33,6.74,9.16,13.50,11.10,7.76,17.13]
+      // Total of the year	97.07
+
       var trace2 = {
         x: yearsMonths,
-        y: [0, 0, 0.46,1.01,0.61,0.55,2.44,0.85,2.54,2.79,1.87,3.84],
+        y: [3.41, 2.35, 6.85,5.28,5.46,8.33,6.74,9.16,13.50,11.10,7.76,17.13],
         type: 'bar',
-        name: 'Year 2021',
+        name: 'Year 2022',
         marker: {
           color: 'rgb(255,128,0)',
           opacity: 0.5
@@ -182,7 +194,7 @@ function createBarChart(totalByMonth, projection){
         x: yearsMonths,
         y: projection,
         type: 'bar',
-        name: 'Projection 2022',
+        name: 'Projection 2023',
         marker: {
           color: 'rgb(144, 238, 144)',
           opacity: 0.5
@@ -227,29 +239,98 @@ function linearRegression(y,x){
     return lr;
 }
 
-function checkFutureEarnings(totalByMonth){
-    let presentYear = createYearSum(totalByMonth, '2022');
-	presentYear.pop();
-	let w = 0;
-    let x = presentYear.map(oink => w++);
-    let y = presentYear.map(parseFloat);
+function checkFutureEarnings(){
+    // let presentYear = createYearSum(totalByMonth, '2022');
+    
+	  //presentYear.pop();
+    
+	  let w = 0;
+    let x = previousYear.map(oink => w++);
+    let y = previousYear.map(parseFloat);
 
     let lr = linearRegression(y,x);
 
-    let newValues = presentYear.map(oink => 0);
+    //let newValues = previousYear.map(oink => 0);
+    let newValues = [];
 	
-	for(let index = presentYear.length; index < 12 ; index++){
+	for(let index = 0; index < 12 ; index++){
 		// calculating the secon month
-		newValues.push(lr['slope']*(index + 1) + lr['intercept'])
+		newValues.push(lr['slope']*(index + 13) + lr['intercept'])
 	}
-	
 	//newValues.push(lr['slope']*13 + lr['intercept']);
-	
-	
 	console.log("The slope = " + lr['slope']);
 	console.log("The intercept = " + lr['intercept']);
-    console.log(newValues);
+  console.log(newValues);
 	return newValues;
+}
+
+function isNumeric(str) {
+  if (typeof str != "string") return false // we only process strings!  
+  return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+         !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+}
+
+function sortTable(n) {
+  var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+  table = document.getElementById("createStockTable");
+  switching = true;
+  // Set the sorting direction to ascending:
+  dir = "asc";
+  /* Make a loop that will continue until
+  no switching has been done: */
+  while (switching) {
+    // Start by saying: no switching is done:
+    switching = false;
+    rows = table.rows;
+    /* Loop through all table rows (except the
+    first, which contains table headers): */
+    for (i = 1; i < (rows.length - 1); i++) {
+      // Start by saying there should be no switching:
+      shouldSwitch = false;
+      /* Get the two elements you want to compare,
+      one from current row and one from the next: */
+      x = rows[i].getElementsByTagName("TD")[n];
+      y = rows[i + 1].getElementsByTagName("TD")[n];
+      /* Check if the two rows should switch place,
+      based on the direction, asc or desc: */
+      if (dir == "asc") {
+        if ( !isNumeric(x.innerHTML) && x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+          // If so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+        else if(parseFloat(x.innerHTML) > parseFloat(y.innerHTML)){
+          shouldSwitch = true;
+          break;
+        }
+      } else if (dir == "desc") {
+        if ( !isNumeric(x.innerHTML) && x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+          // If so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+        else if(parseFloat(x.innerHTML) < parseFloat(y.innerHTML)){
+          shouldSwitch = true;
+          break;
+        }
+      }
+    }
+    if (shouldSwitch) {
+      /* If a switch has been marked, make the switch
+      and mark that a switch has been done: */
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+      // Each time a switch is done, increase this count by 1:
+      switchcount ++;
+    } else {
+      /* If no switching has been done AND the direction is "asc",
+      set the direction to "desc" and run the while loop again. */
+      if (switchcount == 0 && dir == "asc") {
+        dir = "desc";
+        switching = true;
+      }
+    }
+  }
 }
 
 function readFile(fileToLoad){
@@ -266,9 +347,8 @@ function readFile(fileToLoad){
             processDividendByMonth(fileLines);
 
             createHtmlTableDividensByMonth(totalByMonth);
-            const projection = checkFutureEarnings(totalByMonth);
-			createBarChart(totalByMonth, projection);
-
+            const projection = checkFutureEarnings();
+			      createBarChart(totalByMonth, projection);
             createStockTable(myStocksTotal);
             
             console.log("The file: " + fileHeader);
