@@ -159,11 +159,11 @@ function createYearSum(totalByMonth, yearToCheck){
 
 function createBarChart(totalByMonth, projection){
     let barChartLocation = document.getElementById('barChartContainer');
-    let year2022 = createYearSum(totalByMonth, '2023');
+    let year2023 = createYearSum(totalByMonth, '2023');
     
     var trace1 = {
         x: yearsMonths,
-        y: year2022,
+        y: year2023,
         type: 'bar',
         name: 'Year 2023',
         marker: {
@@ -348,7 +348,7 @@ function readFile(fileToLoad){
 
             createHtmlTableDividensByMonth(totalByMonth);
             const projection = checkFutureEarnings();
-			      createBarChart(totalByMonth, projection);
+			createBarChart(totalByMonth, projection);
             createStockTable(myStocksTotal);
             
             console.log("The file: " + fileHeader);
