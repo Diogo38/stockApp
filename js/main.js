@@ -3,10 +3,10 @@ var fileContent;
 var fileLines;
 var fileHeader;
 
-const previousYear = [3.41, 2.35, 6.85,5.28,5.46,8.33,6.74,9.16,13.50,11.10,7.76,17.13];
 const totalByMonth = {};
 const myStocksTotal = {};
 const yearsMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const previousYear = yearToAnalyse - 1;
 
 function getMonthFromDate(dateToParse){
 	const result1 = dateToParse.split(' ');
@@ -159,31 +159,24 @@ function createYearSum(totalByMonth, yearToCheck){
 
 function createBarChart(totalByMonth, projection){
     let barChartLocation = document.getElementById('barChartContainer');
-    let year2023 = createYearSum(totalByMonth, '2023');
+    let year2023 = createYearSum(totalByMonth, '' + yearToAnalyse);
     
     var trace1 = {
         x: yearsMonths,
         y: year2023,
         type: 'bar',
-        name: 'Year 2023',
+        name: 'Year ' + yearToAnalyse,
         marker: {
           color: 'rgb(49,130,189)',
           opacity: 0.7,
         }
       };
 
-      // Hard code values for year 2021
-      // [0, 0, 0.46,1.01,0.61,0.55,2.44,0.85,2.54,2.79,1.87,3.84]
-
-      // Hard code values for year 2022
-      // [3.41, 2.35, 6.85,5.28,5.46,8.33,6.74,9.16,13.50,11.10,7.76,17.13]
-      // Total of the year	97.07
-
       var trace2 = {
         x: yearsMonths,
-        y: [3.41, 2.35, 6.85,5.28,5.46,8.33,6.74,9.16,13.50,11.10,7.76,17.13],
+        y: previousYearValueByMonth,
         type: 'bar',
-        name: 'Year 2022',
+        name: 'Year ' + previousYear,
         marker: {
           color: 'rgb(255,128,0)',
           opacity: 0.5
@@ -194,7 +187,7 @@ function createBarChart(totalByMonth, projection){
         x: yearsMonths,
         y: projection,
         type: 'bar',
-        name: 'Projection 2023',
+        name: 'Projection ' + yearToAnalyse,
         marker: {
           color: 'rgb(144, 238, 144)',
           opacity: 0.5
@@ -245,12 +238,12 @@ function checkFutureEarnings(){
 	  //presentYear.pop();
     
 	  let w = 0;
-    let x = previousYear.map(oink => w++);
-    let y = previousYear.map(parseFloat);
+    let x = previousYearValueByMonth.map(oink => w++);
+    let y = previousYearValueByMonth.map(parseFloat);
 
     let lr = linearRegression(y,x);
 
-    //let newValues = previousYear.map(oink => 0);
+    //let newValues = previousYearValueByMonth.map(oink => 0);
     let newValues = [];
 	
 	for(let index = 0; index < 12 ; index++){
